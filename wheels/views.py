@@ -434,7 +434,6 @@ def add_car(request):
             seating_capacity=request.POST.get("seating_capacity"),
             launch_year=request.POST.get("launch_year"),
             description=request.POST.get("description"),
-            image=request.FILES.get("image")
         )
 
         image = request.FILES.get("image")
