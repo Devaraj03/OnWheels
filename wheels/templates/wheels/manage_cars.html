@@ -1,0 +1,618 @@
+{% extends 'wheels/base.html' %}
+{% load static %}
+
+{% block css %}
+
+<style>
+    th,td{
+        text-align: center;
+    }
+</style>
+
+
+{% endblock %}
+{% block content %}
+
+<div class="container mt-4">
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+
+        <h2>Manage Cars</h2>
+
+        <button
+            class="btn btn-primary"
+            data-bs-toggle="modal"
+            data-bs-target="#addCarModal">
+
+            Add Car
+
+        </button>
+
+    </div>
+
+    <div class="card shadow-sm">
+
+        <div class="card-body">
+
+            <div class="table-responsive">
+
+                <table class="table table-hover align-middle">
+
+                    <thead class="table-light">
+
+                        <tr>
+                            <th>Image</th>
+                            <th>Name</th>
+                            <th>Brand</th>
+                            <th>Category</th>
+                            <th>Price</th>
+                            <th>Fuel</th>
+                            <th>Transmission</th>
+                            <th>Actions</th>
+                        </tr>
+
+                    </thead>
+
+                    <tbody>
+
+                        {% for car in cars %}
+
+                        <tr>
+
+                            <td>
+
+                            {% with thumb=car.thumbnail %}
+                                {% if thumb %}
+                                <img
+                                    src="{{ car.thumbnail.image.url }}"
+                                    width="80"
+                                    height="60"
+                                    style="object-fit:cover;"
+                                    class="rounded">
+                                {% endif %}
+                            {% endwith %}
+                               
+
+                            </td>
+
+                            <td>{{ car.name }}</td>
+
+                            <td>{{ car.brand.name }}</td>
+
+                            <td>{{ car.category.name }}</td>
+
+                            <td>₹{{ car.price }}</td>
+
+                            <td>{{ car.fuel_type }}</td>
+
+                            <td>{{ car.transmission }}</td>
+
+                            <td>
+                            
+                                <div class="dropdown">
+                            
+                                    <button
+                                        class="btn btn-sm btn-light"
+                                        data-bs-toggle="dropdown">
+                            
+                                        <i class="bi bi-three-dots-vertical"></i>
+                            
+                                    </button>
+                            
+                                    <ul class="dropdown-menu dropdown-menu-end">
+                            
+                                        <li>
+                                            <button
+                                                class="dropdown-item"
+                                                data-bs-toggle="modal"
+                                                data-bs-target="#editCar{{ car.id }}">
+                                                Edit
+                                            </button>
+                                        </li>
+                            
+                                        <li>
+                                            <button
+                                                class="dropdown-item text-danger"
+                                                data-bs-toggle="modal"
+                                                data-bs-target="#deleteCar{{ car.id }}">
+                                                Delete
+                                            </button>
+                                        </li>
+                            
+                                    </ul>
+                            
+                                </div>
+                            
+                            </td>
+
+                        </tr>
+
+                        <!-- EDIT MODAL -->
+
+                        <div
+                            class="modal fade"
+                            id="editCar{{ car.id }}">
+
+                            <div class="modal-dialog modal-lg">
+
+                                <div class="modal-content">
+
+                                    <form
+                                        method="POST"
+                                        enctype="multipart/form-data"
+                                        action="{% url 'wheels:edit_car' car.id %}">
+
+                                        {% csrf_token %}
+
+                                        <div class="modal-header">
+
+                                            <h5>Edit Car</h5>
+
+                                            <button
+                                                type="button"
+                                                class="btn-close"
+                                                data-bs-dismiss="modal">
+                                            </button>
+
+                                        </div>
+
+                                        <div class="modal-body">
+
+                                            <div class="row">
+
+                                                <div class="col-md-6 mb-3">
+
+                                                    <label>Name</label>
+
+                                                    <input
+                                                        type="text"
+                                                        name="name"
+                                                        value="{{ car.name }}"
+                                                        class="form-control">
+
+                                                </div>
+
+                                                <div class="col-md-6 mb-3">
+
+                                                    <label>Price</label>
+
+                                                    <input
+                                                        type="number"
+                                                        name="price"
+                                                        value="{{ car.price }}"
+                                                        class="form-control">
+
+                                                </div>
+
+                                                <div class="col-md-6 mb-3">
+
+                                                    <label>Brand</label>
+
+                                                    <select
+                                                        name="brand"
+                                                        class="form-select">
+
+                                                        {% for brand in brands %}
+
+                                                        <option
+                                                            value="{{ brand.id }}"
+                                                            {% if brand.id == car.brand.id %}selected{% endif %}>
+
+                                                            {{ brand.name }}
+
+                                                        </option>
+
+                                                        {% endfor %}
+
+                                                    </select>
+
+                                                </div>
+
+                                                <div class="col-md-6 mb-3">
+
+                                                    <label>Category</label>
+
+                                                    <select
+                                                        name="category"
+                                                        class="form-select">
+
+                                                        {% for category in categories %}
+
+                                                        <option
+                                                            value="{{ category.id }}"
+                                                            {% if category.id == car.category.id %}selected{% endif %}>
+
+                                                            {{ category.name }}
+
+                                                        </option>
+
+                                                        {% endfor %}
+
+                                                    </select>
+
+                                                </div>
+
+                                                <div class="col-md-6 mb-3">
+
+                                                    <label>Fuel Type</label>
+
+                                                    <select
+                                                        name="fuel_type"
+                                                        class="form-select">
+
+                                                        <option value="Petrol" {% if car.fuel_type == 'Petrol' %}selected{% endif %}>Petrol</option>
+
+                                                        <option value="Diesel" {% if car.fuel_type == 'Diesel' %}selected{% endif %}>Diesel</option>
+
+                                                        <option value="Electric" {% if car.fuel_type == 'Electric' %}selected{% endif %}>Electric</option>
+
+                                                    </select>
+
+                                                </div>
+
+                                                <div class="col-md-6 mb-3">
+
+                                                    <label>Transmission</label>
+
+                                                    <select
+                                                        name="transmission"
+                                                        class="form-select">
+
+                                                        <option value="Manual" {% if car.transmission == 'Manual' %}selected{% endif %}>Manual</option>
+
+                                                        <option value="Automatic" {% if car.transmission == 'Automatic' %}selected{% endif %}>Automatic</option>
+
+                                                    </select>
+
+                                                </div>
+
+                                                <div class="col-md-6 mb-3">
+
+                                                    <label>Engine</label>
+
+                                                    <input
+                                                        type="text"
+                                                        name="engine"
+                                                        value="{{ car.engine }}"
+                                                        class="form-control">
+
+                                                </div>
+
+                                                <div class="col-md-6 mb-3">
+
+                                                    <label>Mileage</label>
+
+                                                    <input
+                                                        type="number"
+                                                        step="0.01"
+                                                        name="mileage"
+                                                        value="{{ car.mileage }}"
+                                                        class="form-control">
+
+                                                </div>
+
+                                                <div class="col-md-6 mb-3">
+
+                                                    <label>Seats</label>
+
+                                                    <input
+                                                        type="number"
+                                                        name="seating_capacity"
+                                                        value="{{ car.seating_capacity }}"
+                                                        class="form-control">
+
+                                                </div>
+
+                                                <div class="col-md-6 mb-3">
+
+                                                    <label>Launch Year</label>
+
+                                                    <input
+                                                        type="number"
+                                                        name="launch_year"
+                                                        value="{{ car.launch_year }}"
+                                                        class="form-control">
+
+                                                </div>
+
+                                                <div class="col-12 mb-3">
+
+                                                    <label>Description</label>
+
+                                                    <textarea
+                                                        name="description"
+                                                        rows="4"
+                                                        class="form-control">{{ car.description }}</textarea>
+
+                                                </div>
+
+                                                <div class="col-12 mb-3">
+
+                                                    <label>Image</label>
+                                                     {% if car.thumbnail.image %}
+
+                                                    <div class="text-center mb-3">
+
+                                                        <img
+                                                            src="{{ car.thumbnail.image.url }}"
+                                                            class="img-fluid rounded border"
+                                                            style="max-height:200px;">
+
+                                                    </div>
+
+                                                    {% endif %}
+
+
+                                                    <input
+                                                        type="file"
+                                                        name="image"
+                                                        class="form-control">
+
+                                                </div>
+
+                                            </div>
+
+                                        </div>
+
+                                        <div class="modal-footer">
+
+                                            <button
+                                                class="btn btn-primary">
+
+                                                Update Car
+
+                                            </button>
+
+                                        </div>
+
+                                    </form>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                        <!-- DELETE MODAL -->
+
+                        <div
+                            class="modal fade"
+                            id="deleteCar{{ car.id }}">
+
+                            <div class="modal-dialog">
+
+                                <div class="modal-content">
+
+                                    <form
+                                        method="POST"
+                                        action="{% url 'wheels:delete_car' car.id %}">
+
+                                        {% csrf_token %}
+
+                                        <div class="modal-header">
+
+                                            <h5>Delete Car</h5>
+
+                                        </div>
+
+                                        <div class="modal-body">
+
+                                            Delete
+                                            <strong>{{ car.name }}</strong>
+                                            ?
+
+                                        </div>
+
+                                        <div class="modal-footer">
+
+                                            <button
+                                                type="button"
+                                                class="btn btn-secondary"
+                                                data-bs-dismiss="modal">
+
+                                                Cancel
+
+                                            </button>
+
+                                            <button
+                                                class="btn btn-danger">
+
+                                                Delete
+
+                                            </button>
+
+                                        </div>
+
+                                    </form>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                        {% endfor %}
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<!-- ADD CAR MODAL -->
+
+<div
+    class="modal fade"
+    id="addCarModal">
+
+    <div class="modal-dialog modal-lg">
+
+        <div class="modal-content">
+
+            <form
+                method="POST"
+                enctype="multipart/form-data"
+                action="{% url 'wheels:add_car' %}">
+
+                {% csrf_token %}
+
+                <div class="modal-header">
+
+                    <h5>Add New Car</h5>
+
+                    <button
+                        type="button"
+                        class="btn-close"
+                        data-bs-dismiss="modal">
+                    </button>
+
+                </div>
+
+                <div class="modal-body">
+
+                    <div class="row">
+
+                        <div class="col-md-6 mb-3">
+                            <input type="text" name="name" class="form-control" placeholder="Car Name">
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <input type="number" name="price" class="form-control" placeholder="Price">
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+
+                            <select name="brand" class="form-select">
+
+                                {% for brand in brands %}
+                                <option value="{{ brand.id }}">
+                                    {{ brand.name }}
+                                </option>
+                                {% endfor %}
+
+                            </select>
+
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+
+                            <select name="category" class="form-select">
+
+                                {% for category in categories %}
+                                <option value="{{ category.id }}">
+                                    {{ category.name }}
+                                </option>
+                                {% endfor %}
+
+                            </select>
+
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+
+                            <select name="fuel_type" class="form-select">
+
+                                <option value="Petrol">Petrol</option>
+                                <option value="Diesel">Diesel</option>
+                                <option value="Electric">Electric</option>
+
+                            </select>
+
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+
+                            <select name="transmission" class="form-select">
+
+                                <option value="Manual">Manual</option>
+                                <option value="Automatic">Automatic</option>
+
+                            </select>
+
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <input type="text" name="engine" class="form-control" placeholder="Engine">
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <input type="number" step="0.01" name="mileage" class="form-control" placeholder="Mileage">
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <input type="number" name="seating_capacity" class="form-control" placeholder="Seats">
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <input type="number" name="launch_year" class="form-control" placeholder="Launch Year">
+                        </div>
+
+                        <div class="col-12 mb-3">
+                            <textarea name="description" rows="4" class="form-control" placeholder="Description"></textarea>
+                        </div>
+
+                        <div class="col-12 mb-3">
+                            <img
+                                id="addCarPreview"
+                                src="{% static 'images/no-image.png' %}"
+                                class="img-fluid rounded border">
+                            <input type="file" name="image" class="form-control">
+                        </div>
+
+                    </div>
+
+                </div>
+
+                <div class="modal-footer">
+
+                    <button class="btn btn-success">
+
+                        Save Car
+
+                    </button>
+
+                </div>
+
+            </form>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<script>
+
+function previewAddCarImage(input)
+{
+    const preview =
+        document.getElementById(
+            "addCarPreview"
+        );
+
+    if (input.files && input.files[0])
+    {
+        const reader =
+            new FileReader();
+
+        reader.onload = function(e)
+        {
+            preview.src =
+                e.target.result;
+        };
+
+        reader.readAsDataURL(
+            input.files[0]
+        );
+    }
+}
+
+</script>
+{% endblock %}

@@ -1,0 +1,269 @@
+{% extends 'wheels/base.html' %}
+{% block title %}{{ car.name }}{% endblock %}
+{% block content %}
+
+<div class="container mt-5">
+
+    <div class="row">
+
+        <!-- LEFT: Image -->
+        <div class="col-md-6">
+            {% with thumb=car.thumbnail %}
+                {% if thumb %}
+                    <img src="{{ thumb.image.url }}" class="card-img-top">
+                {% else %}
+                    <img src="https://via.placeholder.com/400x250" class="card-img-top">
+                {% endif %}
+            {% endwith %}
+        </div>
+
+        <!-- RIGHT: Details -->
+        <div class="col-md-6">
+
+            <h2 class="mb-3">{{ car.name }}</h2>
+
+            <p class="text-muted">
+                {{ car.brand.name }} • {{ car.category.name }}
+            </p>
+
+            <h4 class="text-dark fw-bold mb-3">₹ {{ car.price }}</h4>
+
+            <!-- Specs -->
+            <ul class="list-group mb-4">
+                <li class="list-group-item"><strong>Fuel:</strong> {{ car.fuel_type }}</li>
+                <li class="list-group-item"><strong>Transmission:</strong> {{ car.transmission }}</li>
+                <li class="list-group-item"><strong>Engine:</strong> {{ car.engine }}</li>
+                <li class="list-group-item"><strong>Mileage:</strong> {{ car.mileage }} km/l</li>
+                <li class="list-group-item"><strong>Seating:</strong> {{ car.seating_capacity }}</li>
+                <li class="list-group-item"><strong>Launch Year:</strong> {{ car.launch_year }}</li>
+            </ul>
+
+            <!-- <a href="#" class="btn btn-dark me-2">Book Test Drive</a>
+            <a href="#" class="btn btn-outline-secondary">Contact Dealer</a> -->
+
+        </div>
+
+    </div>
+
+    <!-- Description -->
+    <div class="mt-5">
+        <h4>Description</h4>
+        <p class="text-muted">{{ car.description }}</p>
+    </div>
+
+    <!-- Reviews -->
+    <div class="mt-5">
+
+    <div class="card shadow-sm mb-4">
+
+        <div class="card-body text-center">
+
+            <h2 class="text-warning">
+                ⭐ {{ car.average_rating|floatformat:1 }}
+            </h2>
+
+            <p class="mb-0">
+                Based on
+                {{ car.reviews.count }}
+                review{{ car.reviews.count|pluralize }}
+            </p>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% if user.is_authenticated %}
+
+<div class="card mb-4 shadow-sm">
+
+    <div class="card-body">
+
+        <h4 class="mb-3">
+            Write a Review
+        </h4>
+
+        <form method="POST"
+              action="{% url 'wheels:add_review' car.id %}">
+
+            {% csrf_token %}
+
+            <div class="mb-3">
+
+                <label class="form-label">
+                    Rating
+                </label>
+
+                <select
+                    name="rating"
+                    class="form-select"
+                    required>
+
+                    <option value="5">⭐⭐⭐⭐⭐</option>
+                    <option value="4">⭐⭐⭐⭐</option>
+                    <option value="3">⭐⭐⭐</option>
+                    <option value="2">⭐⭐</option>
+                    <option value="1">⭐</option>
+
+                </select>
+
+            </div>
+
+            <div class="mb-3">
+
+                <label class="form-label">
+                    Comment
+                </label>
+
+                <textarea
+                    name="comment"
+                    class="form-control"
+                    rows="4"
+                    required
+                    placeholder="Share your experience with this car">
+                </textarea>
+
+            </div>
+
+            <button class="btn btn-primary">
+                Submit Review
+            </button>
+
+        </form>
+
+    </div>
+
+</div>
+
+{% else %}
+
+<div class="alert alert-info">
+
+    Login to write a review.
+
+</div>
+
+{% endif %}
+
+<h4 class="mb-3">
+    Customer Reviews
+</h4>
+
+{% for review in car.reviews.all %}
+
+<div class="card mb-3 shadow-sm">
+
+    <div class="card-body">
+
+        <div class="d-flex justify-content-between">
+
+            <div>
+
+                <strong>
+                    {{ review.user.username }}
+                </strong>
+
+                <div class="text-warning">
+
+                    {% for i in "12345" %}
+
+                        {% if forloop.counter <= review.rating %}
+                            ★
+                        {% else %}
+                            ☆
+                        {% endif %}
+
+                    {% endfor %}
+
+                </div>
+
+            </div>
+
+            <small class="text-muted">
+
+                {{ review.created_at|date:"d M Y" }}
+
+            </small>
+
+        </div>
+
+        <p class="mt-3 mb-0">
+
+            {{ review.comment }}
+
+        </p>
+
+    </div>
+
+</div>
+
+{% empty %}
+
+<div class="alert alert-light">
+
+    No reviews yet.
+
+</div>
+
+{% endfor %}
+
+
+<h4 class="mt-5 mb-3">
+    Similar Cars
+</h4>
+
+<div class="row">
+
+{% for item in similar_cars %}
+
+<div class="col-md-4">
+
+    <div class="card h-100 shadow-sm">
+
+        {% with thumb=item.thumbnail %}
+
+            {% if thumb %}
+                <img
+                    src="{{ thumb.image.url }}"
+                    class="card-img-top">
+            {% endif %}
+
+        {% endwith %}
+
+        <div class="card-body">
+
+            <h5>
+
+                {{ item.name }}
+
+            </h5>
+
+            <p class="text-primary fw-bold">
+
+                ₹ {{ item.price }}
+
+            </p>
+
+            <a
+                href="{% url 'wheels:car_detail' item.id %}"
+                class="btn btn-outline-primary">
+
+                View Details
+
+            </a>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endfor %}
+
+</div>
+
+
+</div>
+
+{% endblock %}

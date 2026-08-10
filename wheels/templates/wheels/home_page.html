@@ -1,0 +1,238 @@
+{% extends 'wheels/base.html' %}
+{% load static %}
+{% block content %}
+<style>
+.car-img {
+    width: 100%;
+    height: 220px;
+    object-fit: contain;
+    background-color: #ffffff; /* adds background */
+    
+    /*  height: 220px;       fixed height
+    object-fit: cover;       crop nicely 
+    object-position: center;  center image */
+
+}
+.car-img {
+    transition: transform 0.3s ease;
+}
+
+.card:hover .car-img {
+    transform: scale(1.05);
+}
+</style>
+
+
+           
+<!-- HERO -->
+
+<div class="bg-light py-5 mt-5">
+    <div class=" text-center">
+
+
+    <h1 class="fw-bold mb-3">Find Your Perfect Car</h1>
+    <p class="text-muted mb-4">Explore top brands, compare specs, and choose confidently</p>
+
+    <!-- SEARCH FORM -->
+    <form method="GET" id="filterForm" class="row g-2 justify-content-center">
+        
+
+        <div class="col-md-3 col-10">
+            <input type="text" name="q" value="{{ request.GET.q }}" 
+                    class="form-control" placeholder="Search by name...">
+        </div>
+
+        <div class="col-md-2 col-5">
+            <select name="fuel" class="form-select">
+                <option value="">Fuel</option>
+                <option value="Petrol" {% if request.GET.fuel == "Petrol" %}selected{% endif %}>Petrol</option>
+                <option value="Diesel" {% if request.GET.fuel == "Diesel" %}selected{% endif %}>Diesel</option>
+                <option value="Electric" {% if request.GET.fuel == "Electric" %}selected{% endif %}>Electric</option>
+            </select>
+        </div>
+
+        <div class="col-md-2 col-5">
+            <select name="transmission" class="form-select">
+                <option value="">Transmission</option>
+                <option value="Manual" {% if request.GET.transmission == "Manual" %}selected{% endif %}>Manual</option>
+                <option value="Automatic" {% if request.GET.transmission == "Automatic" %}selected{% endif %}>Automatic</option>
+            </select>
+        </div>
+        <div class="col-md-2 col-5">
+                <select name="sort" class="form-select">
+            <option value="">Sort By</option>
+
+            <option value="price_low"
+                {% if request.GET.sort == "price_low" %}selected{% endif %}>
+                Price: Low to High
+            </option>
+          
+            <option value="price_high"
+                {% if request.GET.sort == "price_high" %}selected{% endif %}>
+                Price: High to Low
+            </option>
+        </select>
+        </div>
+
+   
+        
+    </form>
+    
+
+</div>
+
+
+</div>
+
+<!-- CAR LIST -->
+
+<div class="">
+
+
+<div class="d-flex justify-content-between align-items-center mb-4 m-3">
+    <h4 class="fw-bold mb-0">Available Cars</h4>
+    <span id="resultCount" class="text-muted">{{ cars|length }} results</span>
+</div>
+
+<div  id="carResults" class="row g-4">
+
+    {% for car in cars %}
+    <div class="col-lg-4 col-md-6">
+
+        <div class="card h-100 border-0 shadow-sm">
+
+            {% with thumb=car.thumbnail %}
+                {% if thumb %}
+                    <img src="{{ thumb.image.url }}" class="card-img-top car-img">
+                {% else %}
+                    <img src="https://via.placeholder.com/400x250" class="card-img-top">
+                {% endif %}
+            {% endwith %}
+
+            <div class="card-body d-flex flex-column">
+
+                <h5 class="card-title fw-semibold">{{ car.name }}</h5>
+
+                <p class="text-muted small mb-2">
+                    {{ car.brand.name }} • {{ car.category.name }}
+                </p>
+
+                <div class="mb-3 small">
+                    <span class="badge bg-light text-dark border">{{ car.fuel_type }}</span>
+                    <span class="badge bg-light text-dark border">{{ car.transmission }}</span>
+                    <span class="badge bg-light text-dark border">{{ car.seating_capacity }} Seats</span>
+                </div>
+
+                <h5 class="text-primary fw-bold mb-3">₹ {{ car.price }}</h5>
+
+                <div class="mt-auto">
+                    <a href="{% url 'wheels:car_detail' car.id %}" class="btn btn-outline-primary w-100">
+                        View Details
+                    </a>
+                </div>
+
+            </div>
+        </div>
+
+    </div>
+    {% empty %}
+    <div class="col-12 text-center text-muted">
+        No cars available
+    </div>
+    {% endfor %}
+
+</div>
+
+
+</div>
+
+<!-- FOOTER -->
+
+<footer class="bg-light border-top py-4 mt-5">
+    <div class="text-center">
+        <p class="mb-1 fw-semibold">OnWheels</p>
+        <p class="text-muted small mb-0">© 2026 All rights reserved</p>
+    </div>
+</footer>
+
+{% endblock %}
+
+
+{% block extra_js %}
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+
+    const form = document.getElementById("filterForm");
+    const results = document.getElementById("carResults");
+    const searchInput = form.querySelector('input[name="q"]');
+
+    let timer;
+
+    function filterCars() {
+
+        const params = new URLSearchParams(new FormData(form));
+
+        fetch(window.location.pathname + "?" + params.toString(), {
+            headers: {
+                "X-Requested-With": "XMLHttpRequest"
+            }
+        })
+        .then(response => response.text())
+        .then(html => {
+
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(html, "text/html");
+
+            // Get filtered car results
+            const newResults = doc.getElementById("carResults");
+
+            if (newResults) {
+                results.innerHTML = newResults.innerHTML;
+            }
+
+            // Get filtered result count
+            const newCount = doc.getElementById("resultCount");
+
+            if (newCount) {
+                document.getElementById("resultCount").textContent =
+                    newCount.textContent;
+            }
+
+            // Update URL
+            window.history.replaceState(
+                {},
+                "",
+                window.location.pathname + "?" +
+                params.toString()
+            );
+        })
+        .catch(error => {
+            console.error("Filter error:", error);
+        });
+    }
+
+
+    // SEARCH
+    searchInput.addEventListener("input", function () {
+
+        clearTimeout(timer);
+
+        timer = setTimeout(function () {
+            filterCars();
+        }, 500);
+
+    });
+
+
+    // SELECT FILTERS
+    form.querySelectorAll("select").forEach(function (select) {
+
+        select.addEventListener("change", function () {
+            filterCars();
+        });
+
+    });
+
+});
+</script>
+{% endblock %}
